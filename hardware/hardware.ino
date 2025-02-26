@@ -36,7 +36,31 @@
 
 
 // DEFINE VARIABLES
+#define analogPin A4
+#define BTN1      25
+#define BTN2      26
+#define BTN3      27
 
+
+#define TFT_CS    5
+#define TFT_RST   16
+#define TFT_DC    17
+#define TFT_MOSI  23
+#define TFT_CLK   18
+#define TFT_MISO  19
+
+#define BOX_WIDTH 50
+#define BOX_HEIGHT 50
+#define SPACING 5
+#define MARGIN 10
+
+uint8_t currentDigit = 1; // Keeps track of the current digit being modified by the potentiometer 
+bool lockState = false; // keeps track of the Open and Close state of the lock
+
+unsigned char num_1 = 0;
+unsigned char num_2 = 0;
+unsigned char num_3 = 0;
+unsigned char num_4 = 0;
 
 
 
@@ -110,13 +134,27 @@ void showLockState(void);
 void setup() {
     Serial.begin(115200);  // INIT SERIAL  
  
-  
+  /* TFT DISPLAY SET UP */
+  tft.begin();
+  tft.fillScreen(ILI9341_WHITE);
+  tft.setTextColor(ILI9341_DARKGREY);
+  tft.setTextSize(1);
+
+  /* ENABLE PULL-UP RESISTORS */
+  pinMode(BTN1,INPUT_PULLUP);
+  pinMode(BTN2,INPUT_PULLUP);
+  pinMode(BTN3,INPUT_PULLUP);
     
   // CONFIGURE THE ARDUINO PINS OF THE 7SEG AS OUTPUT
  
   /* Configure all others here */
 
   initialize();           // INIT WIFI, MQTT & NTP 
+  digit1(0);
+  digit2(0);
+  digit3(0);
+  digit4(0);
+
   vButtonCheckFunction(); // UNCOMMENT IF USING BUTTONS THEN ADD LOGIC FOR INTERFACING WITH BUTTONS IN THE vButtonCheck FUNCTION
 
 }
@@ -125,6 +163,31 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly: 
+   int value = map(analogRead(analogPin),0,4096,0,10);
+
+  if(currentDigit == 1){
+    digit1(value);
+    num_1 = value;
+  }
+
+  if(currentDigit == 2){
+    digit2(value);
+    num_2 = value;
+  }
+  
+  if(currentDigit == 3){
+    digit3(value);
+    num_3 = value;
+  }
+
+  if(currentDigit == 4){
+    digit4(value);
+    num_4 = value;
+  }
+
+  vTaskDelay(1000 / portTICK_PERIOD_MS);  
+  
+}
 
  
 
@@ -144,11 +207,30 @@ void vButtonCheck( void * pvParameters )  {
         // Add code here to check if a button(S) is pressed
         // then execute appropriate function if a button is pressed  
 
-        // 1. Implement button1  functionality
+       if(!digitalRead(BTN1)){
+
+          if(currentDigit == 4){
+            currentDigit = 1;
+          }
+
+          else{
+            currentDigit++;
+          }
+          
+        }
 
         // 2. Implement button2  functionality
 
+        if(!digitalRead(BTN2)){
+          checkPasscode();
+        }
+
         // 3. Implement button3  functionality
+
+        if(!digitalRead(BTN3)){
+          lockState = false;
+          showLockState();
+        }
        
         vTaskDelay(200 / portTICK_PERIOD_MS);  
     }
@@ -160,6 +242,7 @@ void vUpdate( void * pvParameters )  {
     for( ;; ) {
           // Task code goes here.   
           // PUBLISH to topic every second.  
+          
             
         vTaskDelay(1000 / portTICK_PERIOD_MS);  
     }
@@ -212,44 +295,75 @@ bool publish(const char *topic, const char *payload){
 
 //***** Complete the util functions below ******
   
-void digit1(uint8_t number){
-  // CREATE BOX AND WRITE NUMBER IN THE BOX FOR THE FIRST DIGIT
-  // 1. Set font to FreeSansBold18pt7b 
-  // 2. Draw a filled rounded rectangle close to the bottom of the screen. Give it any colour you like 
-  // 3. Set cursor to the appropriate coordinates in order to write the number in the middle of the box 
-  // 4. Set the text colour of the number. Use any colour you like 
-  // 5. Set font size to one 
-  // 6. Print number to the screen 
-}
  
-void digit2(uint8_t number){
+void digit1(uint8_t number){
   // CREATE BOX AND WRITE NUMBER IN THE BOX FOR THE SECOND DIGIT
   // 1. Set font to FreeSansBold18pt7b 
+  tft.setFont(&FreeSansBold18pt7b);
   // 2. Draw a filled rounded rectangle close to the bottom of the screen. Give it any colour you like 
-  // 3. Set cursor to the appropriate coordinates in order to write the number in the middle of the box 
+  tft.fillRoundRect(10, 255, 38, 40, 5, ILI9341_BLACK);
+  // 3. Set cursor to the appropriate coordinates in order to write the number in the middle of the box
+  tft.setCursor(20, 285); 
   // 4. Set the text colour of the number. Use any colour you like 
+  tft.setTextColor(ILI9341_RED);
   // 5. Set font size to one 
+  tft.setTextSize(1);
   // 6. Print number to the screen 
+  tft.print(number);
+  
+  
+  
+  
+  
+  
+}
+
+void digit2(uint8_t number){
+  // CREATE BOX AND WRITE NUMBER IN THE BOX FOR THE THIRD DIGIT
+  // 1. Set font to FreeSansBold18pt7b 
+  tft.setFont(&FreeSansBold18pt7b);
+  // 2. Draw a filled rounded rectangle close to the bottom of the screen. Give it any colour you like 
+  tft.fillRoundRect(70, 255, 38, 40, 5, ILI9341_BLACK);
+  // 3. Set cursor to the appropriate coordinates in order to write the number in the middle of the box
+  tft.setCursor(80, 285); 
+  // 4. Set the text colour of the number. Use any colour you like 
+  tft.setTextColor(ILI9341_RED);
+  // 5. Set font size to one 
+  tft.setTextSize(1);
+  // 6. Print number to the screen 
+  tft.print(number); 
 }
 
 void digit3(uint8_t number){
-  // CREATE BOX AND WRITE NUMBER IN THE BOX FOR THE THIRD DIGIT
+  // CREATE BOX AND WRITE NUMBER IN THE BOX FOR THE FOURTH DIGIT
   // 1. Set font to FreeSansBold18pt7b 
+  tft.setFont(&FreeSansBold18pt7b);
   // 2. Draw a filled rounded rectangle close to the bottom of the screen. Give it any colour you like 
-  // 3. Set cursor to the appropriate coordinates in order to write the number in the middle of the box 
+  tft.fillRoundRect(130, 255, 38, 40, 5, ILI9341_BLACK);
+  // 3. Set cursor to the appropriate coordinates in order to write the number in the middle of the box
+  tft.setCursor(140, 285); 
   // 4. Set the text colour of the number. Use any colour you like 
+  tft.setTextColor(ILI9341_RED);
   // 5. Set font size to one 
+  tft.setTextSize(1);
   // 6. Print number to the screen 
+  tft.print(number);
 }
 
 void digit4(uint8_t number){
-  // CREATE BOX AND WRITE NUMBER IN THE BOX FOR THE FOURTH DIGIT
+  // CREATE BOX AND WRITE NUMBER IN THE BOX FOR THE FIRST DIGIT
   // 1. Set font to FreeSansBold18pt7b 
+  tft.setFont(&FreeSansBold18pt7b);
   // 2. Draw a filled rounded rectangle close to the bottom of the screen. Give it any colour you like 
-  // 3. Set cursor to the appropriate coordinates in order to write the number in the middle of the box 
+  tft.fillRoundRect(190, 255, 38, 40, 5, ILI9341_BLACK);
+  // 3. Set cursor to the appropriate coordinates in order to write the number in the middle of the box
+  tft.setCursor(200, 285); 
   // 4. Set the text colour of the number. Use any colour you like 
+  tft.setTextColor(ILI9341_RED);
   // 5. Set font size to one 
+  tft.setTextSize(1);
   // 6. Print number to the screen 
+  tft.print(number);
 }
  
  
