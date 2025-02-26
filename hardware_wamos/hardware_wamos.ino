@@ -1,19 +1,27 @@
 
 #include <SoftwareSerial.h>
 // IMPORT ALL REQUIRED LIBRARIES
+#include <NewPing.h>
+#include <ArduinoJson.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+#ifndef ARDUINO_H
+#include <Arduino.h>
+#endif 
 
 #include <math.h>
    
 //**********ENTER IP ADDRESS OF SERVER******************//
 
-#define HOST_IP     "localhost"       // REPLACE WITH IP ADDRESS OF SERVER ( IP ADDRESS OF COMPUTER THE BACKEND IS RUNNING ON) 
+#define HOST_IP     "192.168.100.72"       // REPLACE WITH IP ADDRESS OF SERVER ( IP ADDRESS OF COMPUTER THE BACKEND IS RUNNING ON) 
 #define HOST_PORT   "8080"            // REPLACE WITH SERVER PORT (BACKEND FLASK API PORT)
 #define route       "api/update"      // LEAVE UNCHANGED 
-#define idNumber    "620012345"       // REPLACE WITH YOUR ID NUMBER 
+#define idNumber    "620165845"       // REPLACE WITH YOUR ID NUMBER 
 
 // WIFI CREDENTIALS
-#define SSID        "YOUR WIFI"      // "REPLACE WITH YOUR WIFI's SSID"   
-#define password    "YOUR PASSWORD"  // "REPLACE WITH YOUR WiFi's PASSWORD" 
+#define SSID        "iPhone (8)"      // "REPLACE WITH YOUR WIFI's SSID"   
+#define password    "Steviecool-16"  // "REPLACE WITH YOUR WiFi's PASSWORD" 
 
 #define stay        100
  
@@ -27,16 +35,31 @@
  
  
 /* Declare your functions below */
- 
+
+#define Trigger 6
+#define Echo 8
+#define sensor_height 94.5
+#define max_height 77.763
+#define difference 16.737
+#define radius 30.75
+
+
+
+void espInit();
+void espSend(char command[] );
+void espUpdate(char mssg[]);
+double calcReserve(double height);
+
  
 
 SoftwareSerial esp(espRX, espTX); 
- 
+NewPing sonar(Trigger, Echo); // Create an instance of NewPing called sonar
 
 void setup(){
 
   Serial.begin(115200); 
   // Configure GPIO pins here
+ 
 
  
 
@@ -47,7 +70,23 @@ void setup(){
 void loop(){ 
    
   // send updates with schema ‘{"id": "student_id", "type": "ultrasonic", "radar": 0, "waterheight": 0, "reserve": 0, "percentage": 0}’
+  double radar =  sonar.ping_in(); // 
+  double water_height =  sensor_height - radar;
+  double reserve = CalcReserve(water_height);
+  double percent = (water_height/max_height)*100;
+  
+  StaticJsonDocument<290> doc;
+  char mssg[290]={0};
 
+  doc["id"] = "620165845";
+  doc["type"] = "ultrasonic";
+  doc["radar"] = radar;
+  doc["waterheight"] = water_height;
+  doc["reserve"] = reserve;
+  doc["percentage"] = percent;
+
+   serializeJson(doc, mssg);
+   espUpdate(mssg);
 
 
   delay(1000);  
@@ -106,4 +145,7 @@ void espInit(){
 
 //***** Design and implement all util functions below ******
  
+ double calcReserve(double height){
+  return (M_PI * pow(radius,2) * height) / 231.0;
+ }
 
