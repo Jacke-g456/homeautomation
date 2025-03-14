@@ -10,7 +10,7 @@
         <v-row>
             <v-col>
                 <v-card class="bg-background" flat>
-                    <v-btn class="bg-primary" text="Submit" variant="tonal" @click="storePasscode();"></v-btn>
+                    <v-btn class="bg-primary" text="Submit" variant="tonal" @click="read_passcode();"></v-btn>
                 </v-card>
             </v-col>
         </v-row>
@@ -62,7 +62,7 @@ onBeforeUnmount(()=>{
 function read_passcode() {
     // This reads the passcode 
     console.log(passcode.value);
-    AppStore.getSetPwd(passcode.value);
+    AppStore.getinsert_passcode(passcode.value);
 }
 
 </script>

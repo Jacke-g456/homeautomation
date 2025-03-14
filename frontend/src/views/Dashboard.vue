@@ -6,7 +6,7 @@
             <v-col align="left">
                 <v-sheet class="sheet" width="100">
                     <v-card flat>
-                        <v-slider color="green" v-model="radarValue" max="100" thumb-label direction="vertical" track-size="60" label="Height(in)"></v-slider>
+                        <v-slider color="green" v-model="radar_val" max="100" thumb-label direction="vertical" track-size="60" label="Height(in)"></v-slider>
                     </v-card>
                 </v-sheet>
             </v-col>
@@ -15,7 +15,7 @@
                 <v-sheet class="sheet" border max="100">
                     <v-card>
                         <figure class="highcharts-figure">
-                            <div id="container"></div>
+                            <div id="container1"></div>
                         </figure>
                     </v-card>   
                 </v-sheet>
@@ -29,7 +29,7 @@
                 <v-sheet class="sheet0" border max="400">
                     <v-card flat>
                         <figure class="highcharts-figure">
-                            <div id="container1"></div>
+                            <div id="container2"></div>
                         </figure>
                     </v-card>   
                 </v-sheet>
@@ -42,9 +42,9 @@
             </v-col>
         </v-row>
 
-        <v-dialog v-model="overflowDialog" max-width="400">
-            <template v-slot:default="{ overflowDialog }">
-                <v-card title="Overflow Detected" color="warning" background-color="primary darken-1">
+        <v-dialog v-model="overflow" max-width="400">
+            <template v-slot:default="{ overflow }">
+                <v-card title="Overflow Detected" color="blue" background-color="primary darken-1">
                     <v-card-actions>
                         <v-spacer></v-spacer>
                     </v-card-actions>
@@ -133,7 +133,7 @@ onBeforeUnmount(()=>{
 
 const CreateCharts = async () => {
 // waterReserveChart
-    waterReserveChart = Highcharts.chart('container', {
+    waterReserveChart = Highcharts.chart('container1', {
         chart: { zoomType: 'x' },
         title: { text: 'Water Reserves(10 min)', align: 'left' },
         yAxis: {
@@ -149,14 +149,21 @@ const CreateCharts = async () => {
             {
                 name: 'Water',
                 type: 'area',
-                data: [],
+                data: [1],
                 turboThreshold: 0,
-                color: Highcharts.getOptions().colors[0]
+                color: Highcharts.getOptions().colors[0],
+                pointWidth: 1000
             },],
+             plotOptions: {
+              bar: {
+                horizontal: false,
+                columnWidth: '100%',
+                endingShape: 'rounded',
+              },},
     });
 
      // waterGaugeChart 
-    waterGaugeChart.value = Highcharts.chart('container1', {
+    waterGaugeChart.value = Highcharts.chart('container2', {
         chart: { zoomType: 'x' },
         title: { text: 'Water Reserves', align: 'left' },
         yAxis: {

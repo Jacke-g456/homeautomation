@@ -14,22 +14,22 @@
    
 //**********ENTER IP ADDRESS OF SERVER******************//
 
-#define HOST_IP     "192.168.100.72"       // REPLACE WITH IP ADDRESS OF SERVER ( IP ADDRESS OF COMPUTER THE BACKEND IS RUNNING ON) 
+#define HOST_IP     "172.20.10.2"       // REPLACE WITH IP ADDRESS OF SERVER ( IP ADDRESS OF COMPUTER THE BACKEND IS RUNNING ON) 
 #define HOST_PORT   "8080"            // REPLACE WITH SERVER PORT (BACKEND FLASK API PORT)
 #define route       "api/update"      // LEAVE UNCHANGED 
 #define idNumber    "620165845"       // REPLACE WITH YOUR ID NUMBER 
 
 // WIFI CREDENTIALS
-#define SSID        "iPhone (8)"      // "REPLACE WITH YOUR WIFI's SSID"   
-#define password    "Steviecool-16"  // "REPLACE WITH YOUR WiFi's PASSWORD" 
+#define SSID        "MonaConnect"      // "REPLACE WITH YOUR WIFI's SSID"   
+#define password    ""  // "REPLACE WITH YOUR WiFi's PASSWORD" 
 
 #define stay        100
  
 //**********PIN DEFINITIONS******************//
 
  
-#define espRX         10
-#define espTX         11
+#define espRX         11
+#define espTX         10
 #define espTimeout_ms 300
 
  
@@ -37,7 +37,7 @@
 /* Declare your functions below */
 
 #define Trigger 6
-#define Echo 8
+#define Echo 7
 #define sensor_height 94.5
 #define max_height 77.763
 #define difference 16.737
@@ -53,7 +53,7 @@ double calcReserve(double height);
  
 
 SoftwareSerial esp(espRX, espTX); 
-NewPing sonar(Trigger, Echo); // Create an instance of NewPing called sonar
+NewPing sonar(Trigger, Echo, max_height); // Create an instance of NewPing called sonar
 
 void setup(){
 
@@ -70,13 +70,13 @@ void setup(){
 void loop(){ 
    
   // send updates with schema ‘{"id": "student_id", "type": "ultrasonic", "radar": 0, "waterheight": 0, "reserve": 0, "percentage": 0}’
-  double radar =  sonar.ping_in(); // 
-  double water_height =  sensor_height - radar;
-  double reserve = CalcReserve(water_height);
+  double radar =  sonar.ping_in()-16.737; // 
+  double water_height =  max_height - radar;
+  double reserve = calcReserve(water_height);
   double percent = (water_height/max_height)*100;
   
-  StaticJsonDocument<290> doc;
-  char mssg[290]={0};
+  StaticJsonDocument<1000> doc;
+  char mssg[200]={0};
 
   doc["id"] = "620165845";
   doc["type"] = "ultrasonic";
@@ -101,7 +101,7 @@ void espSend(char command[] ){
 
 void espUpdate(char mssg[]){ 
     char espCommandString[50] = {0};
-    char post[290]            = {0};
+    char post[500]            = {0};
 
     snprintf(espCommandString, sizeof(espCommandString),"AT+CIPSTART=\"TCP\",\"%s\",%s\r\n",HOST_IP,HOST_PORT); 
     espSend(espCommandString);    //starts the connection to the server
@@ -128,11 +128,18 @@ void espInit(){
     Serial.println("Initiallizing");
     esp.println("AT"); 
     delay(1000);
+
+    
     esp.println("AT+CWMODE=1");
     delay(1000);
     while(esp.available()){ Serial.println(esp.readString());} 
 
     snprintf(connection, sizeof(connection),"AT+CWJAP=\"%s\",\"%s\"\r\n",SSID,password);
+    delay(5000);
+if(esp.available()) {
+    Serial.println(esp.readString());
+}
+
     esp.print(connection);
 
     delay(3000);  //gives ESP some time to get IP
@@ -142,6 +149,8 @@ void espInit(){
     Serial.println("\nFinish Initializing");    
    
 }
+
+
 
 //***** Design and implement all util functions below ******
  

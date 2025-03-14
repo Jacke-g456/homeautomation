@@ -135,7 +135,7 @@ export const useAppStore =  defineStore('app', ()=>{
         return [];
     }
 
-    const getavgerage= async (start,end) => {
+    const getaverage= async (start,end) => {
         const controller = new AbortController();
         const signal = controller.signal;
         const id = setTimeout(() => { controller.abort() }, 60000);
@@ -177,7 +177,7 @@ export const useAppStore =  defineStore('app', ()=>{
     getvalidate_passcode,
     getupdate_radar,	
     retrieve_getAll,
-    getavgerage
+    getaverage
     
     
         

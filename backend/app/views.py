@@ -32,13 +32,12 @@ import json
 def insert_passcode():
     if request.method == "POST":
         try:
-            form = request.form
-            passcode = escape(form.get("passcode"))
-
-            if not (passcode.isdigit() and len(passcode) == 4):
-                return jsonify({"status": "failed", "data": "failed"})
+        
+            passcode = request.json.get('code')
+            print(f"passcode: {passcode}")
 
 
+            
             success = mongo.insertPasscode(passcode)
             if success:
                 return jsonify({"status": "complete", "data": "complete"})
@@ -54,10 +53,6 @@ def validate_passcode():
         try:
             form = request.form
             passcode = escape(form.get("passcode"))
-
-            if not (passcode.isdigit() and len(passcode) == 4):
-                return jsonify({"status": "failed", "data": "failed"})
-
 
             success = mongo.getCount(passcode)
             if success:
@@ -97,8 +92,8 @@ def update_radar():
 def get_all_radar(start,end):
      if request.method == "GET":
         try:
-            start = int(start)
-            end = int(end)
+            start = escape(start)
+            end = escape(end)
 
             result = mongo.getAll(start,end)
             if result:
@@ -113,8 +108,8 @@ def get_all_radar(start,end):
 def average(start, end):
     if request.method == "GET":
         try:
-            start = int(start)
-            end = int(end)
+            start = escape(start)
+            end = escape(end)
 
             result = mongo.avgReserve(start,end)
             if result:

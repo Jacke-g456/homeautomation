@@ -8,7 +8,7 @@
                     <v-text-field class="mr-5" label="Start date" type="Date" density="compact" variant="solo" style="max-width: 300px;" v-model="start"></v-text-field>
                     <v-text-field class="mr-5" label="End date" type="Date" density="compact" variant="solo" style="max-width: 300px;" v-model="end"></v-text-field>
                     <v-spacer></v-spacer>
-                    <v-btn class="text-caption rounded-0" text="Analyze" variant="elevated" @click="updateLineCharts();updateCards();"></v-btn>
+                    <v-btn class="text-caption rounded-0" text="Analyze" variant="elevated" @click="updateLineCharts();updateCard();"></v-btn>
                 </v-card>
             </v-col>
             <!-- COLUMN 2 -->
@@ -16,7 +16,7 @@
                 <v-card title="Average" subtitle="For the selected period" width="400" height="250" variant="outlined" color="bg-surface" density="compact" rounded="lg">
                     <v-card-item align="center">
                         <span class="text-h1 text-primary font-weight-bold">
-                            {{ avg.value }}
+                            {{ reserve.avg}}
                             <span class="text-caption">Gal</span>
                         </span>
                     </v-card-item>
@@ -29,13 +29,13 @@
             <!-- COLUMN 1 -->
             <v-col cols="12">
                 <figure class="highcharts-figure">
-                    <div id="container0"></div>
+                    <div id="container1"></div>
                 </figure>
             </v-col>
             <!-- COLUMN 2 -->
             <v-col cols="12">
                 <figure class="highcharts-figure">
-                    <div id="container1"></div>
+                    <div id="container2"></div>
                 </figure>
             </v-col>
         </v-row> 
@@ -68,11 +68,13 @@ const AppStore    = useAppStore();
 const Mqtt        = useMqttStore();
 const { payload, payloadTopic } = storeToRefs(Mqtt);
 
-const start       = ref(null);
-const end         = ref(null);
+var start       = ref(null);
+var end         = ref(null);
+const average= ref(null);
 const waterManagementChart = ref(null);
 const heightWaterLevelChart = ref(null);
-const reserve = reactive({ "avg": 0 })
+var reserve = reactive({ "avg": 0 })
+let height= [];
 
 const CreateCharts = async () => {
     // TEMPERATURE CHART
@@ -131,34 +133,27 @@ const updateLineCharts = async () => {
         const data = await AppStore.retrieve_getAll(startDate, endDate);
         // Create arrays for each plot 
         let reserve = [];
+        let height =[];
         // Iterate through data variable and transform object to format recognized by highcharts
         data.forEach(row => {
             reserve.push({ "x": row.timestamp * 1000, "y": parseFloat(row.reserve.toFixed(0)) });
            
         });
+        
+         console.log(reserve);
+         console.log(height);
         // Add data to  water Management Chart
         waterManagementChart.value.series[0].setData(reserve);
+        heightWaterLevelChart.value.series[0].setData(height);
          }
 }
 
 
 const updateScatterPlot = async () => {
     if (!!start.value && !!end.value) {
-        // Convert output from Textfield components to 10 digit timestamps
-        let startDate = new Date(start.value).getTime() / 1000;
-        let endDate = new Date(end.value).getTime() / 1000;
-        // Fetch data from backend
-        const data = await AppStore.retrieve_getAll(startDate, endDate);
-        // Create arrays for each plot 
-        let graph = [];
         
-
-        // Iterate through data variable and transform object to format recognized by highcharts
-        data.forEach(row => {
-            graph.push({ "x": parseFloat(row.waterheight.toFixed(0)), "y": parseFloat(row.radar.toFixed(0)) });
-           });
         
-        ScatterPlot.value.series[0].setData(graph);
+       heightWaterLevelChart.value.series[0].setData(height);
         
 
     }
@@ -172,11 +167,11 @@ const updateCard = async () => {
         let endDate = new Date(end.value).getTime() / 1000;
 
         // 2. Fetch data from backend by calling the API functions
-        const ReserveAVGfromDatabase = await AppStore.getaverage(startDate, endDate);
-        console.log(ReserveAVGfromDatabase)
+        const average = await AppStore.getaverage(startDate, endDate);
+        console.log(average)
 
        
-        reserve.avg = ReserveAVGfromDatabase[0].average.toFixed(1);
+        reserve.avg = average[0].average.toFixed(1)*10;
     }
 }
 

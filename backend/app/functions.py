@@ -67,6 +67,7 @@ class DB:
     # 2. CREATE FUNCTION TO RETRIEVE ALL DOCUMENTS FROM RADAR COLLECT BETWEEN SPECIFIED DATE RANGE. MUST RETURN A LIST OF DOCUMENTS
     def getAll(self, start,end):
          try:
+              start, end = int(start), int(end)
               remotedb = self.remoteMongo('mongodb://%s:%s@%s:%s' % (self.username, self.password,self.server,self.port), tls=self.tls)
               result = list(remotedb.ELET2415.radar.find({"timestamp": {"$gte": start, "$lte": end}, "reserve": {"$exists": True}},{"_id":0, "timestamp":1, "reserve":1, "waterheight":1}))
          except Exception as e:
@@ -78,9 +79,10 @@ class DB:
 
     # 3. CREATE A FUNCTION TO COMPUTE THE ARITHMETIC AVERAGE ON THE 'reserve' FEILED/VARIABLE, USING ALL DOCUMENTS FOUND BETWEEN SPECIFIED START AND END TIMESTAMPS. RETURNS A LIST WITH A SINGLE OBJECT INSIDE
     def avgReserve(self, start,end):
+         start,end=int(start),int(end)
          try:
               remotedb = self.remoteMongo('mongodb://%s:%s@%s:%s' % (self.username, self.password,self.server,self.port), tls=self.tls)
-              result = list(result = remotedb.ELET2415.radar.aggregate([
+              result = list(remotedb.ELET2415.radar.aggregate([
                                                                     {"$match": {"timestamp": {"$gte": start, "$lte": end}}},
                                                                     {"$group": {"_id": None, "average": {"$avg": "$reserve"}}},
                                                                     {"$project": {"_id": 0, "average": 1}}
@@ -95,10 +97,11 @@ class DB:
     def insertPasscode(self, passcode):
          try:
               remotedb = self.remoteMongo('mongodb://%s:%s@%s:%s' % (self.username, self.password,self.server,self.port), tls=self.tls)
-              result = remotedb.ELET2415.code.find_one_and_update({}, { '$set': {'code': passcode}}, upsert=True, projection={'_id': False})
+              result = remotedb.ELET2415.code.find_one_and_update({"type": "passcode"}, { '$set': {'code': passcode}}, upsert=True, projection={'_id': False}, return_document=self.ReturnDocument.AFTER )
          except Exception as e:
               msg = str(e)
               print("insertPasscode Error:", msg)
+              return False
          else:
               return result
    
@@ -113,7 +116,7 @@ class DB:
               msg = str(e)
               print("getCount Error:", msg)
          else:
-              return result
+              return result>0
 
 
    
